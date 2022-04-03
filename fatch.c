@@ -9,7 +9,7 @@
 #include "config.h"   // config
 #include "language.h" // language
 
-#define VERSION "1.0.0-Release"
+#define VERSION "1.0.1-Bugfix"
 
 int starts_with(const char *prefix, const char *str)
 {
@@ -52,7 +52,7 @@ char *get_os(char *distro)
 {
     // allocate memory
     char *os = (char *)calloc(32, 32);
-    strcpy(os, "Unknown");
+    strcpy(os, LANGUAGE_UNKNOWN);
 
     // parse distro/os name
     if (distro == NULL || !distro || strlen(distro) == 0)
@@ -122,12 +122,12 @@ char *get_kernel()
         }
         else
         {
-            memset(kernel, '?', 5);
+            strcpy(kernel, LANGUAGE_UNKNOWN);
         }
     }
     else
     {
-        memset(kernel, '?', 5);
+        strcpy(kernel, LANGUAGE_UNKNOWN);
     }
     free(ostype_buf);
     return kernel;
