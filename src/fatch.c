@@ -9,7 +9,7 @@
 #include "config.h"   // config
 #include "language.h" // language
 
-#define VERSION "1.0.1-Bugfix"
+#define VERSION "1.1.0-Release"
 
 int starts_with(const char *prefix, const char *str)
 {
@@ -124,6 +124,7 @@ char *get_kernel()
         {
             strcpy(kernel, LANGUAGE_UNKNOWN);
         }
+        fclose(osrelease_fp);
     }
     else
     {
@@ -403,6 +404,10 @@ int main(int argc, char **argv)
         else if (strcmp("-h", argv[i]) == 0 || strcmp("--help", argv[i]) == 0)
         {
             printf(LANGUAGE_USAGE, argv[0]);
+            return 0;
+        }
+        else if (strcmp("-l", argv[i]) == 0 || strcmp("--legal", argv[i]) == 0) {
+            puts(LANGUAGE_LICENSE);
             return 0;
         }
 

@@ -1,6 +1,6 @@
 PREFIX = /usr/local
 CC = gcc
-CFILES = fatch.c
+CFILES = src/fatch.c
 EXECUTABLE = fatch
 CFLAGS = -O2
 LDFLAGS = -lpci
