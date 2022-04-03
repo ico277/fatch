@@ -3,7 +3,7 @@ A fast command line system information tool written in C.
 
 # Compilation
 ## With GPU support
-### Depenencies
+### Dependencies
 Fatch needs libpci to search for installed GPUs.
 
 Debian* (apt) `libpci-dev`
@@ -26,7 +26,7 @@ and then to install (you might need root permission so it might be necessary to 
 make install
 ```
 ## Without GPU support
-### Depenencies
+### Dependencies
 Fatch has no dependencies without GPU support.
 
 ### Building
