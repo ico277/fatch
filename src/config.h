@@ -78,7 +78,7 @@
     "      > / /\n"     \
     "      \\ \\ \\\n"  \
     "       \\_\\_\\\n" \
-    "          \\\n"    \
+    ">          \\\n"   \
     "\n"                \
     "\n"                \
     "\n"
@@ -106,6 +106,18 @@
     "######## ########\n" \
     "######## ########\n" \
     "\n"
+
+#define GENTOO            \
+    "      _-----_\n"     \
+    "     (       \\\n"   \
+    "     \\    0   \\\n" \
+    "      \\        )\n" \
+    "      /      _/\n"   \
+    "     (     _-\n"     \
+    "     \\____-\n"      \
+    "\n"                  \
+    "\n"                  \
+    "\n"
 // -- ASCII art end --
 
 // -- config end --
@@ -117,23 +129,11 @@
 #define RESET "\x1b[0m"
 #define MOVE_CUR "\x1b[20C"
 
-#ifdef NO_PCI
-
-#define TEMPLATE \
-    KEY_COLOR_CODE MOVE_CUR "OS      " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s\n"          \
-    KEY_COLOR_CODE MOVE_CUR "Kernel  " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s\n"          \
-    KEY_COLOR_CODE MOVE_CUR "CPU     " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s\n"          \
-    KEY_COLOR_CODE MOVE_CUR "Memory  " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %dMiB/%dMiB\n" \
-    RESET
-
-#else
-
-#define TEMPLATE \
-    KEY_COLOR_CODE MOVE_CUR "OS      " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s\n"          \
-    KEY_COLOR_CODE MOVE_CUR "Kernel  " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s\n"          \
-    KEY_COLOR_CODE MOVE_CUR "CPU     " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s\n"          \
-    KEY_COLOR_CODE MOVE_CUR "GPU     " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s\n"          \
-    KEY_COLOR_CODE MOVE_CUR "Memory  " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %dMiB/%dMiB\n" \
-    RESET
-
+#define TEMPLATE_OS     KEY_COLOR_CODE MOVE_CUR "OS      " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s"
+#define TEMPLATE_SHELL  KEY_COLOR_CODE MOVE_CUR "Shell   " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s"
+#define TEMPLATE_KERNEL KEY_COLOR_CODE MOVE_CUR "Kernel  " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s"
+#define TEMPLATE_CPU    KEY_COLOR_CODE MOVE_CUR "CPU     " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s"
+#ifndef NO_PCI
+#define TEMPLATE_GPU    KEY_COLOR_CODE MOVE_CUR "GPU     " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %s"
 #endif
+#define TEMPLATE_MEMORY KEY_COLOR_CODE MOVE_CUR "Memory  " SEPARATOR_COLOR_CODE SEPARATOR VALUE_COLOR_CODE "  %dMiB/%dMiB"

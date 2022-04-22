@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#ifdef __unix__
+#include <sys/ioctl.h>
+#else
+#include <fcntl.h>
+#endif
 #ifndef NO_PCI
 #include <pci/pci.h>
 #include <pci/types.h>
@@ -9,7 +14,7 @@
 #include "config.h"   // config
 #include "language.h" // language
 
-#define VERSION "1.1.0-Release"
+#define VERSION "2.0.0-Release"
 
 int starts_with(const char *prefix, const char *str)
 {
@@ -21,16 +26,16 @@ int starts_with(const char *prefix, const char *str)
 char *get_distro()
 {
     // allocate memory
-    char *distro = (char *)calloc(32, 32);
+    char *distro = (char *)calloc(1, 4096);
 
     // Reading /etc/os-release
     FILE *os_release_fp = fopen("/etc/os-release", "r");
     if (os_release_fp == NULL)
         abort();
 
-    char *os_release_buf = (char *)calloc(512, 512);
+    char *os_release_buf = (char *)calloc(1, 4096);
     // read /etc/os-release line by line
-    while (fgets(os_release_buf, 1024, os_release_fp) != NULL)
+    while (fgets(os_release_buf, 4096, os_release_fp) != NULL)
     {
         // check if string starts with ID=
         if (starts_with("ID=", os_release_buf))
@@ -51,7 +56,7 @@ char *get_distro()
 char *get_os(char *distro)
 {
     // allocate memory
-    char *os = (char *)calloc(32, 32);
+    char *os = (char *)calloc(1, 4096);
     strcpy(os, LANGUAGE_UNKNOWN);
 
     // parse distro/os name
@@ -85,6 +90,10 @@ char *get_os(char *distro)
         {
             strcpy(os, "Pop!_OS");
         }
+        else if (strcmp(distro, "gentoo") == 0)
+        {
+            strcpy(os, "Gentoo Linux");
+        }
     }
 
     return os;
@@ -93,13 +102,13 @@ char *get_os(char *distro)
 char *get_kernel()
 {
     // allocate memory
-    char *kernel = (char *)calloc(32, 32);
+    char *kernel = (char *)calloc(1, 4096);
 
     // parse /proc/sys/kernel/ostype
     FILE *ostype_fp = fopen("/proc/sys/kernel/ostype", "r");
     if (ostype_fp == NULL)
         abort();
-    char *ostype_buf = (char *)calloc(32, 32);
+    char *ostype_buf = (char *)calloc(1, 4096);
     if (fgets(ostype_buf, 32, ostype_fp) != NULL)
     {
         size_t ostype_buf_len = strlen(ostype_buf);
@@ -137,15 +146,15 @@ char *get_kernel()
 char *get_cpu()
 {
     // allocate memory
-    char *cpu = (char *)malloc(128);
+    char *cpu = (char *)malloc(4096);
 
     // parse /proc/cpuinfo
     FILE *cpuinfo_fp = fopen("/proc/cpuinfo", "r");
     if (cpuinfo_fp == NULL)
         abort();
-    char *cpuinfo_buf = (char *)malloc(1024);
+    char *cpuinfo_buf = (char *)malloc(4096);
     memset(cpuinfo_buf, 0, 1);
-    while (fgets(cpuinfo_buf, 1024, cpuinfo_fp) != NULL)
+    while (fgets(cpuinfo_buf, 4096, cpuinfo_fp) != NULL)
     {
         if (starts_with("model name", cpuinfo_buf))
         {
@@ -165,7 +174,7 @@ char *get_cpu()
 char *get_gpu()
 {
     // allocate memory
-    char *gpu = (char *)calloc(128, 128);
+    char *gpu = (char *)calloc(1, 4096);
     memset(gpu, '?', 5);
 
     // parse PCI devices
@@ -203,13 +212,13 @@ char *get_gpu()
 void get_mem(int *mem_total, int *mem_used)
 {
     // parse /proc/meminfo
-    char *mem_total_str = (char *)calloc(64, 64);
-    char *mem_available_str = (char *)calloc(64, 64);
+    char *mem_total_str = (char *)calloc(1, 4096);
+    char *mem_available_str = (char *)calloc(1, 4096);
     FILE *meminfo_fp = fopen("/proc/meminfo", "r");
     if (meminfo_fp == NULL)
         abort();
-    char *meminfo_buf = (char *)calloc(1024, 1024);
-    while (fgets(meminfo_buf, 1024, meminfo_fp) != NULL)
+    char *meminfo_buf = (char *)calloc(1, 4096);
+    while (fgets(meminfo_buf, 4096, meminfo_fp) != NULL)
     {
         if (starts_with("MemTotal", meminfo_buf))
         {
@@ -283,6 +292,21 @@ void get_mem(int *mem_total, int *mem_used)
     free(mem_available_str);
 }
 
+char *get_shell()
+{
+    char *shell = calloc(1, 4096);
+    char *env = getenv("SHELL");
+    if (env)
+    {
+        strcpy(shell, env);
+    }
+    else
+    {
+        strcpy(shell, "Unknown");
+    }
+    return shell;
+}
+
 void print_distro(char *distro)
 {
     printf(DISTRO_COLOR_CODE);
@@ -310,27 +334,88 @@ void print_distro(char *distro)
     {
         printf(POPOS);
     }
+    else if (strcmp(distro, "gentoo") == 0)
+    {
+        printf(GENTOO);
+    }
     else
     {
         printf(UNKNOWN);
     }
 }
 
-#ifdef NO_PCI
-void print_info(char *os, char *kernel, char *CPU, int mem_used, int mem_total)
+int get_term_width()
 {
-    printf("\x1b[10F");
-    printf(TEMPLATE, os, kernel, CPU, mem_used, mem_total);
-    printf("\x1b[4E");
-}
+    int width = -1;
+
+#ifdef __unix__
+    struct winsize max;
+    ioctl(0, TIOCGWINSZ, &max);
+    width = max.ws_col;
 #else
-void print_info(char *os, char *kernel, char *CPU, char *GPU, int mem_used, int mem_total)
-{
-    printf("\x1b[10F");
-    printf(TEMPLATE, os, kernel, CPU, GPU, mem_used, mem_total);
-    printf("\x1b[4E");
-}
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    int tmpret;
+    tmpret = GetConsoleScreenBufferInfo(hConsole, &csbi);
+    (void)tmpret;
+    width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
 #endif
+
+    return width;
+}
+
+void print_info(char *os, char *shell, char *kernel, char *cpu, char *gpu, int mem_used, int mem_total)
+{
+    // allocate a string for every line
+    char *os_line = calloc(1, 4096);
+    char *shell_line = calloc(1, 4096);
+    char *kernel_line = calloc(1, 4096);
+    char *cpu_line = calloc(1, 4096);
+#ifndef NO_PCI
+    char *gpu_line = calloc(1, 4096);
+#endif
+    char *mem_line = calloc(1, 4096);
+    // copy and format
+    sprintf(os_line, TEMPLATE_OS, os);
+    sprintf(shell_line, TEMPLATE_SHELL, shell);
+    sprintf(kernel_line, TEMPLATE_KERNEL, kernel);
+    sprintf(cpu_line, TEMPLATE_CPU, cpu);
+#ifndef NO_PCI
+    sprintf(gpu_line, TEMPLATE_GPU, gpu);
+#endif
+    sprintf(mem_line, TEMPLATE_MEMORY, mem_used, mem_total);
+
+    // get terminal size
+    int term_width = get_term_width();
+    if (term_width > 0 && term_width < 4077)
+    {
+        // check string size and cut accordingly
+        os_line[term_width + 18] = '\0';
+        shell_line[term_width + 18] = '\0';
+        kernel_line[term_width + 18] = '\0';
+        cpu_line[term_width + 18] = '\0';
+        gpu_line[term_width + 18] = '\0';
+        mem_line[term_width + 18] = '\0';
+    }
+
+    // print the lines
+    printf("\x1b[10F");
+#ifdef NO_PCI
+    printf("%s\n%s\n%s\n%s\n%s\n", os_line, kernel_line, cpu_line, mem_line);
+#else
+    printf("%s\n%s\n%s\n%s\n%s\n%s\n", os_line, shell_line, kernel_line, cpu_line, gpu_line, mem_line);
+#endif
+    printf("\x1b[4E");
+
+    // free memory
+    free(os_line);
+    free(shell_line);
+    free(kernel_line);
+    free(cpu_line);
+#ifndef NO_PCI
+    free(gpu_line);
+#endif
+    free(mem_line);
+}
 
 int main(int argc, char **argv)
 {
@@ -390,7 +475,7 @@ int main(int argc, char **argv)
         {
             if ((i + 1) < argc)
             {
-                distro = (char *)calloc(512, 512);
+                distro = (char *)calloc(1, 4096);
                 strcpy(distro, argv[i + 1]);
                 i++;
             }
@@ -406,7 +491,8 @@ int main(int argc, char **argv)
             printf(LANGUAGE_USAGE, argv[0]);
             return 0;
         }
-        else if (strcmp("-l", argv[i]) == 0 || strcmp("--legal", argv[i]) == 0) {
+        else if (strcmp("-l", argv[i]) == 0 || strcmp("--legal", argv[i]) == 0)
+        {
             puts(LANGUAGE_LICENSE);
             return 0;
         }
@@ -427,6 +513,7 @@ int main(int argc, char **argv)
 
     // memory stuff
     char *os = NULL;
+    char *shell = NULL;
     char *kernel = NULL;
     char *cpu = NULL;
 #ifndef NO_PCI
@@ -440,6 +527,8 @@ int main(int argc, char **argv)
     }
     // get OS
     os = get_os(distro);
+    // get shell
+    shell = get_shell();
     // get kernel
     kernel = get_kernel();
     // get CPU
@@ -460,13 +549,14 @@ int main(int argc, char **argv)
 
 // print info
 #ifdef NO_PCI
-    print_info(os, kernel, cpu, mem_used, mem_total);
+    print_info(os, shell, kernel, cpu, NULL, mem_used, mem_total);
 #else
-    print_info(os, kernel, cpu, gpu, mem_used, mem_total);
+    print_info(os, shell, kernel, cpu, gpu, mem_used, mem_total);
 #endif
 
     // cleanup
     free(os);
+    free(shell);
     free(distro);
     free(kernel);
     free(cpu);
