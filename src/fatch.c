@@ -14,7 +14,7 @@
 #include "config.h"   // config
 #include "language.h" // language
 
-#define VERSION "2.0.0-Release"
+#define VERSION "2.0.1-Release"
 
 int starts_with(const char *prefix, const char *str)
 {
@@ -393,14 +393,16 @@ void print_info(char *os, char *shell, char *kernel, char *cpu, char *gpu, int m
         shell_line[term_width + 18] = '\0';
         kernel_line[term_width + 18] = '\0';
         cpu_line[term_width + 18] = '\0';
+#ifndef NO_PCI
         gpu_line[term_width + 18] = '\0';
+#endif
         mem_line[term_width + 18] = '\0';
     }
 
     // print the lines
     printf("\x1b[10F");
 #ifdef NO_PCI
-    printf("%s\n%s\n%s\n%s\n%s\n", os_line, kernel_line, cpu_line, mem_line);
+    printf("%s\n%s\n%s\n%s\n%s\n", os_line, shell_line, kernel_line, cpu_line, mem_line);
 #else
     printf("%s\n%s\n%s\n%s\n%s\n%s\n", os_line, shell_line, kernel_line, cpu_line, gpu_line, mem_line);
 #endif
