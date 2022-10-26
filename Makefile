@@ -5,6 +5,9 @@ EXECUTABLE = fatch
 CFLAGS = -O2
 LDFLAGS = -lpci
 
+#VALGRIND = 0
+#NO_PCI = 0 
+
 .PHONY: build build_nopci install uninstall clean run debug debug_nopci
 
 build:
@@ -29,9 +32,11 @@ run: build
 
 debug: clean
 	$(CC) -DDEBUG $(CFILES) -o $(EXECUTABLE)_debug $(LDFLAGS) $(CFLAGS)
-	valgrind --leak-check=full --show-leak-kinds=all ./$(EXECUTABLE)_debug
+	#valgrind --leak-check=full --show-leak-kinds=all ./$(EXECUTABLE)_debug
+	./$(EXECUTABLE)_debug
 
 debug_nopci: clean
 	$(CC) -DDEBUG -DNO_PCI $(CFILES) -o $(EXECUTABLE)_debug $(CFLAGS)
-	valgrind --leak-check=full --show-leak-kinds=all ./$(EXECUTABLE)_debug
+	#valgrind --leak-check=full --show-leak-kinds=all ./$(EXECUTABLE)_debug
+	./$(EXECUTABLE)_debug
 

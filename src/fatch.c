@@ -14,7 +14,7 @@
 #include "config.h"   // config
 #include "language.h" // language
 
-#define VERSION "2.0.1-Release"
+#define VERSION "3.0.0-Dev"
 
 #ifndef NO_PCI
 struct gpu_buffer {
@@ -401,7 +401,7 @@ int get_term_width()
 	return width;
 }
 
-void print_info(char *os, char *shell, char *kernel, char *cpu, char *gpu, int mem_used, int mem_total)
+void print_info(char *os, char *shell, char *kernel, char *cpu, struct gpu_buffer *gpu, int mem_used, int mem_total)
 {
 	// allocate a string for every line
 	char *os_line = calloc(1, 4096);
@@ -409,7 +409,7 @@ void print_info(char *os, char *shell, char *kernel, char *cpu, char *gpu, int m
 	char *kernel_line = calloc(1, 4096);
 	char *cpu_line = calloc(1, 4096);
 #ifndef NO_PCI
-	char *gpu_line = calloc(1, 4096);
+	char *gpu_line = calloc(gpu->count, 1024);
 #endif
 	char *mem_line = calloc(1, 4096);
 	// copy and format
@@ -418,7 +418,16 @@ void print_info(char *os, char *shell, char *kernel, char *cpu, char *gpu, int m
 	sprintf(kernel_line, TEMPLATE_KERNEL, kernel);
 	sprintf(cpu_line, TEMPLATE_CPU, cpu);
 #ifndef NO_PCI
-	sprintf(gpu_line, TEMPLATE_GPU, gpu);
+    char *gpu_ptr = gpu->buffer;
+    char *gpu_line_ptr = gpu_line;
+    for(int i = 0; i < gpu->count; i++) {
+        if (i >= 4) break;
+	    sprintf(gpu_line_ptr, TEMPLATE_GPU, gpu_ptr);
+        int len = strlen(gpu_line_ptr);
+        gpu_line_ptr[len] = '\n';
+        gpu_ptr = gpu_ptr + 256;
+        gpu_line_ptr = &gpu_line_ptr[len + 1];
+    }
 #endif
 	sprintf(mem_line, TEMPLATE_MEMORY, mem_used, mem_total);
 
@@ -442,7 +451,7 @@ void print_info(char *os, char *shell, char *kernel, char *cpu, char *gpu, int m
 #ifdef NO_PCI
 	printf("%s\n%s\n%s\n%s\n%s\n", os_line, shell_line, kernel_line, cpu_line, mem_line);
 #else
-	printf("%s\n%s\n%s\n%s\n%s\n%s\n", os_line, shell_line, kernel_line, cpu_line, gpu_line, mem_line);
+	printf("%s\n%s\n%s\n%s\n%s%s\n", os_line, shell_line, kernel_line, cpu_line, gpu_line, mem_line);
 #endif
 	printf("\x1b[4E");
 
@@ -557,7 +566,7 @@ int main(int argc, char **argv)
 	char *kernel = NULL;
 	char *cpu = NULL;
 #ifndef NO_PCI
-	char *gpu = NULL;
+	struct gpu_buffer *gpu = NULL;
 #endif
 
 	// get distro
@@ -577,12 +586,14 @@ int main(int argc, char **argv)
 #ifndef NO_PCI
 	// get GPU info
 	struct gpu_buffer *gpuinfo = get_gpu();
-	gpu = (char *)calloc(gpuinfo->count, 256);
+	gpu = gpuinfo;
+
+    /*gpu = (char *)calloc(gpuinfo->count, 256);
 	for(int i = 0; i < gpuinfo->count; i++) {
 		strcpy(gpu, &(gpuinfo->buffer)[i * 256]);
-	}
-	free(gpuinfo->buffer);
-	free(gpuinfo);
+	}*/
+    //free(gpuinfo->buffer);
+	//free(gpuinfo);
 #endif
 
 	// get meminfo
@@ -607,6 +618,7 @@ int main(int argc, char **argv)
 	free(kernel);
 	free(cpu);
 #ifndef NO_PCI
-	free(gpu);
+	free(gpuinfo->buffer);
+	free(gpuinfo);
 #endif
 }
