@@ -2,7 +2,7 @@
 A fast command line system information tool written in C.
 
 # WIP
-## Fatch is currently rewritten in C++ therefore it is still very incomplete and any sort of (build) instructions might be out of date!
+## Fatch is currently being rewritten in C++ therefore it is still very incomplete and any sort of (build) instructions might be out of date!
 
 # Compilation
 ## With GPU support
