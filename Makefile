@@ -1,20 +1,23 @@
 PREFIX = /usr/local
-CC = cc
-CFILES = $(wildcard src/*.c)
+CC = g++
+CCFILES = $(wildcard src/*.cpp)
 EXECUTABLE = fatch
 CFLAGS = -O2
-LDFLAGS = -lpci
 
-#VALGRIND = 0
-#NO_PCI = 0 
+ifdef CLANG
+	CC = clang
+endif
+ifdef DEBUG
+	CFLAGS += -DDEBUG -O0 -g
+endif
+ifndef NO_PCI
+	LDFLAGS = -lpci
+endif
 
 .PHONY: build build_nopci install uninstall clean run debug debug_nopci
 
 build:
-	$(CC) $(CFILES) -o $(EXECUTABLE) $(LDFLAGS) $(CFLAGS)
-
-build_nopci:
-	$(CC) -DNO_PCI $(CFILES) -o $(EXECUTABLE) $(CFLAGS)
+	$(CC) $(CCFILES) -o $(EXECUTABLE) $(CFLAGS) $(LDFLAGS)  
 
 install: ./$(EXECUTABLE)
 	cp ./$(EXECUTABLE) $(PREFIX)/bin/
@@ -28,15 +31,9 @@ clean:
 	rm ./vgcore* 2> /dev/null || true
 
 run: build
-	./$(EXECUTABLE)
-
-debug: clean
-	$(CC) -DDEBUG $(CFILES) -o $(EXECUTABLE)_debug $(LDFLAGS) $(CFLAGS)
-	#valgrind --leak-check=full --show-leak-kinds=all ./$(EXECUTABLE)_debug
-	./$(EXECUTABLE)_debug
-
-debug_nopci: clean
-	$(CC) -DDEBUG -DNO_PCI $(CFILES) -o $(EXECUTABLE)_debug $(CFLAGS)
-	#valgrind --leak-check=full --show-leak-kinds=all ./$(EXECUTABLE)_debug
-	./$(EXECUTABLE)_debug
+ifdef DEBUGGER
+	$(DEBUGGER) ./$(EXECUTABLE) $(RUNARGS)
+else
+	./$(EXECUTABLE) $(RUNARGS)
+endif
 
