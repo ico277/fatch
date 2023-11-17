@@ -2,6 +2,8 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <map>
+#include <sstream>
 #include <cstring>
 #include <cstdlib>
 
@@ -16,6 +18,58 @@ extern "C" {
 
 using std::string;
 using std::ifstream;
+
+/*enum InfoLineType {
+    distro,
+    pretty_name,
+    kernel,
+    CPU,
+    GPU,
+    memory,
+    shell,
+    sh,
+    str
+};
+
+struct InfoLine {
+    InfoLineType type;
+    string line;
+};*/
+
+struct Config {
+    string path;
+    std::map<string, string> ascii_art = {
+        {
+            "unknown",
+            "     #####\n    ##O#O##\n    #######\n  ###########\n #############\n###############\n #############\n  ###########\n"
+        },
+        {
+            "arch",
+            "      /\\\n     /  \\\n    /\\   \\\n   /      \\\n  /   __   \\\n /   |  |  -\\\n/_-''    ''-_\\\n"
+        },
+        {
+            "debian",
+            "  _____\n /  ___ \\\n|  /     |\n|  \\____/\n -_\n   -._\n"
+        },
+        {
+            "ubuntu",
+            "         _\n     ---(_)\n _/  ---  \\\n(_) |   |\n  \\  --- _/\n     ---(_)\n"
+        },
+        {
+            "linuxmint",
+            " ______________\n|__             \\\n   | | _______   |\n   | |  |  |  |  |\n   | |  |  |  |  |\n   | \\________/  |\n   \\____________/\n"
+        },
+        {
+            "pop",
+            "______\n\\   _ \\        __\n \\ \\ \\ \\      / /\n  \\ \\_\\ \\    / /\n   \\  ___\\  /_/\n    \\ \\    _ \n   __\\_\\__(_)_ \n  (___________)`\n"
+        },
+        {
+            "gentoo",
+            " _-----_\n(       \\\n\\    0   \\\n \\        )\n /      _/\n(     _-\n\\____-\n"
+        }
+    };
+    std::vector<string> lines;
+};
 
 void get_osrelease(string &id, string &pretty_name) {
     string buf;
@@ -167,29 +221,53 @@ void get_shell(string &shell) {
         shell = env;
 }
 
+void read_conf(struct Config &conf) {}
+
+std::size_t print_art(struct Config conf, string distro) {
+    string art = conf.ascii_art["unknown"];
+    if (conf.ascii_art.count(distro) > 0) {
+        art = conf.ascii_art[distro];
+    }
+
+    string buf;
+    std::size_t max_length = 0;
+    std::istringstream art_stream(art);
+    while (getline(art_stream, buf)) {
+        std::size_t len = buf.length();
+        if (max_length < len)
+            max_length = len;
+        std::cout << buf << "\n";
+    }
+    return max_length;
+}
+
 int main(int argc, char** argv) {
+    // config
+    struct Config conf;
+    read_conf(conf);
+
+    // info variables
     string distro, pretty_name, kernel, kernel_release, cpu, shell;
     std::vector<string> GPUs;
     // 0:memtotal 1:memused
     int mem[2] = {0,0};
 
+    // get info
     get_osrelease(distro, pretty_name);
     DBG("distro: " << distro);
     DBG("pretty name: " << pretty_name);
-
     get_kernel(kernel, kernel_release);
     DBG("kernel: " << kernel << " " << kernel_release);
-
     get_cpu(cpu);
     DBG("CPU: " << cpu);
-
     get_gpu(GPUs);
     for (string &gpu : GPUs)
         DBG("GPU: " << gpu);
-
     get_mem(mem);
     DBG("mem: " << mem[1] << "MiB/" << mem[0] << "MiB");
-
     get_shell(shell);
     DBG("shell: " << shell);
+
+    // print art
+    DBG("\n" << print_art(conf, distro));
 }
