@@ -6,8 +6,10 @@
 #include <cstdlib>
 
 extern "C" {
+#ifndef NO_PCI
     #include <pci/pci.h>
     #include <pci/types.h>
+#endif
 }
 
 #include "utils.hpp" 
@@ -87,6 +89,7 @@ void get_cpu(string &cpu) {
     cpuinfo_file.close();
 }
 
+#ifndef NO_PCI
 void get_gpu(std::vector<string> &GPUs) {
     struct pci_access *pciaccess = pci_alloc();
     pci_init(pciaccess);
@@ -115,6 +118,9 @@ void get_gpu(std::vector<string> &GPUs) {
         }
     }
 }
+#else
+void get_gpu(std::vector<string> &GPUs) {}
+#endif
 
 void get_mem(int(&mem)[2]) {
     string buf, memtotal, memavailable;

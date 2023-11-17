@@ -12,6 +12,8 @@ ifdef DEBUG
 endif
 ifndef NO_PCI
 	LDFLAGS = -lpci
+else
+	CFLAGS += -DNO_PCI
 endif
 
 .PHONY: build build_nopci install uninstall clean run debug debug_nopci
