@@ -288,8 +288,8 @@ int main(int argc, char** argv) {
     // print info
     MOVE_CUR_UP(art_size[0]);
 
-    int i;
-    for(i = 0; i < conf.lines.size(); i++) {
+    int total_info_lines;
+    for(int i = 0; i < conf.lines.size(); i++) {
         MOVE_CUR_RIGHT(art_size[1]);
         string line = conf.lines[i];
         replaceAll(line, "%DISTRO%", distro);
@@ -298,16 +298,22 @@ int main(int argc, char** argv) {
         replaceAll(line, "%KERNEL_TYPE%", kernel);
         replaceAll(line, "%KERNEL_RELEASE%", kernel_release);
         replaceAll(line, "%CPU%", cpu);
-        replaceAll(line, "%GPU%", "test");
+        if (line.find("%GPU%") != string::npos) {
+            for (string gpu : GPUs) {
+                total_info_lines++;
+                replaceAll(line, "%GPU%", gpu);
+            }
+        }
         replaceAll(line, "%MEMTOTAL%", std::to_string(mem[0]));
         replaceAll(line, "%MEMUSED%", std::to_string(mem[1]));
         replaceAll(line, "%MEMPERCENT%", std::to_string((mem[1] * 100) / mem[0]));
         replaceAll(line, "%SHELL%", shell);
 
         std::cout << line << "\n";
+        total_info_lines++;
     }
 
-    int lines_left = art_size[0] - i;
+    int lines_left = art_size[0] - total_info_lines;
     if (lines_left > 0)
         MOVE_CUR_DOWN(lines_left + 1);
     std::cout << COL_RESET;
