@@ -298,16 +298,18 @@ int main(int argc, char** argv) {
         replaceAll(line, "%KERNEL_TYPE%", kernel);
         replaceAll(line, "%KERNEL_RELEASE%", kernel_release);
         replaceAll(line, "%CPU%", cpu);
-        if (line.find("%GPU%") != string::npos) {
-            for (string gpu : GPUs) {
-                total_info_lines++;
-                replaceAll(line, "%GPU%", gpu);
-            }
-        }
         replaceAll(line, "%MEMTOTAL%", std::to_string(mem[0]));
         replaceAll(line, "%MEMUSED%", std::to_string(mem[1]));
         replaceAll(line, "%MEMPERCENT%", std::to_string((mem[1] * 100) / mem[0]));
         replaceAll(line, "%SHELL%", shell);
+        if (line.find("%GPU%") != string::npos) {
+            for (string gpu : GPUs) {
+                total_info_lines++;
+                replaceAll(line, "%GPU%", gpu);
+                std::cout << line << "\n";
+            }
+            continue;
+        }
 
         std::cout << line << "\n";
         total_info_lines++;
