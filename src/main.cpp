@@ -231,7 +231,7 @@ void read_conf(struct Config &conf) {
         " CPU    ->  %CPU%",
         " GPU    ->  %GPU%",
         " Memory ->  %MEMUSED%MiB/%MEMTOTAL%MiB (%MEMPERCENT%%)",
-        " SH$(printf \"$((5 + 5))\""};
+        " SH$(printf \"$((5 + 5))\")"};
 }
 
 std::array<std::size_t, 2> print_art(struct Config conf, string distro) {
