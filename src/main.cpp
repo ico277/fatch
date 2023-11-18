@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <sstream>
+#include <array>
 #include <cstring>
 #include <cstdlib>
 
@@ -221,9 +222,19 @@ void get_shell(string &shell) {
         shell = env;
 }
 
-void read_conf(struct Config &conf) {}
+//TODO add proper config parsing
+void read_conf(struct Config &conf) {
+    conf.lines = {
+        " OS     ->  %NAME%",
+        " Kernel ->  %KERNEL%",
+        " Shell  ->  %SHELL%",
+        " CPU    ->  %CPU%",
+        " GPU    ->  %GPU%",
+        " Memory ->  %MEMUSED%MiB/%MEMTOTAL%MiB (%MEMPERCENT%%)",
+        " SH$(printf \"$((5 + 5))\""};
+}
 
-std::size_t print_art(struct Config conf, string distro) {
+std::array<std::size_t, 2> print_art(struct Config conf, string distro) {
     string art = conf.ascii_art["unknown"];
     if (conf.ascii_art.count(distro) > 0) {
         art = conf.ascii_art[distro];
@@ -231,15 +242,20 @@ std::size_t print_art(struct Config conf, string distro) {
 
     string buf;
     std::size_t max_length = 0;
+    std::size_t lines = 0;
     std::istringstream art_stream(art);
     while (getline(art_stream, buf)) {
+        lines++;
         std::size_t len = buf.length();
         if (max_length < len)
             max_length = len;
         std::cout << buf << "\n";
     }
-    return max_length;
+    return {lines, max_length};
 }
+
+/*void print_info(struct Config conf, std::array<std::size_t, 2> art_size) {
+}*/
 
 int main(int argc, char** argv) {
     // config
@@ -249,8 +265,7 @@ int main(int argc, char** argv) {
     // info variables
     string distro, pretty_name, kernel, kernel_release, cpu, shell;
     std::vector<string> GPUs;
-    // 0:memtotal 1:memused
-    int mem[2] = {0,0};
+    int mem[2] = {0,0}; // 0:memtotal 1:memused
 
     // get info
     get_osrelease(distro, pretty_name);
@@ -269,5 +284,31 @@ int main(int argc, char** argv) {
     DBG("shell: " << shell);
 
     // print art
-    DBG("\n" << print_art(conf, distro));
+    std::array<std::size_t, 2> art_size = print_art(conf, distro);
+    // print info
+    MOVE_CUR_UP(art_size[0]);
+
+    int i;
+    for(i = 0; i < conf.lines.size(); i++) {
+        MOVE_CUR_RIGHT(art_size[1]);
+        string line = conf.lines[i];
+        replaceAll(line, "%DISTRO%", distro);
+        replaceAll(line, "%NAME%", pretty_name);
+        replaceAll(line, "%KERNEL%", kernel + " " + kernel_release);
+        replaceAll(line, "%KERNEL_TYPE%", kernel);
+        replaceAll(line, "%KERNEL_RELEASE%", kernel_release);
+        replaceAll(line, "%CPU%", cpu);
+        replaceAll(line, "%GPU%", "test");
+        replaceAll(line, "%MEMTOTAL%", std::to_string(mem[0]));
+        replaceAll(line, "%MEMUSED%", std::to_string(mem[1]));
+        replaceAll(line, "%MEMPERCENT%", std::to_string((mem[1] * 100) / mem[0]));
+        replaceAll(line, "%SHELL%", shell);
+
+        std::cout << line << "\n";
+    }
+
+    int lines_left = art_size[0] - i;
+    if (lines_left > 0)
+        MOVE_CUR_DOWN(lines_left + 1);
+    std::cout << COL_RESET;
 }
